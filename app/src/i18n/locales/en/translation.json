@@ -418,12 +418,14 @@
       "errorLoading": "Error loading profiles: {{message}}",
       "empty": "No voice profiles yet. Create your first profile to get started.",
       "createVoice": "Create Voice",
-      "unsupportedNote": "Only supported voice profiles can be selected for the current model."
+      "unsupportedNote": "Only supported voice profiles can be selected for the current model.",
+      "qwenCloudCloningNote": "QwenCloud: the first generation with a cloned voice uploads its voice sample to QwenCloud to create a cloned voice there."
     },
     "deleteDialog": {
       "title": "Delete Profile",
       "body": "Are you sure you want to delete \"{{name}}\"? All generations made with this voice, including their audio files, will be deleted too. This action cannot be undone.",
-      "deleting": "Deleting…"
+      "deleting": "Deleting…",
+      "qwenCloudNote": "If this voice was cloned on QwenCloud, Voicebox will also try to delete it there."
     }
   },
   "effects": {

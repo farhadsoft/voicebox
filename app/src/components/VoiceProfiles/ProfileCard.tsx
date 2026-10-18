@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import type { VoiceProfileResponse } from '@/lib/api/types';
 import { useDeleteProfile, useExportProfile } from '@/lib/hooks/useProfiles';
+import { useServerHealth } from '@/lib/hooks/useServer';
 import { cn } from '@/lib/utils/cn';
 import { useUIStore } from '@/stores/uiStore';
 
@@ -34,6 +35,8 @@ interface ProfileCardProps {
 export function ProfileCard({ profile, disabled }: ProfileCardProps) {
   const { t } = useTranslation();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const { data: health } = useServerHealth();
+  const qwenCloudCloning = health?.qwen_cloud_cloning_enabled ?? false;
 
   const deleteProfile = useDeleteProfile();
   const exportProfile = useExportProfile();
@@ -161,6 +164,9 @@ export function ProfileCard({ profile, disabled }: ProfileCardProps) {
             <DialogTitle>{t('profiles.deleteDialog.title')}</DialogTitle>
             <DialogDescription>
               {t('profiles.deleteDialog.body', { name: profile.name })}
+              {qwenCloudCloning && (profile.voice_type || 'cloned') === 'cloned' && (
+                <> {t('profiles.deleteDialog.qwenCloudNote')}</>
+              )}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

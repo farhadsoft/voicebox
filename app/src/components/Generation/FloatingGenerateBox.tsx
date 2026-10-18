@@ -20,6 +20,7 @@ import { engineSupportsInstruct } from '@/lib/constants/engines';
 import { getLanguageOptionsForEngine, type LanguageCode } from '@/lib/constants/languages';
 import { useGenerationForm } from '@/lib/hooks/useGenerationForm';
 import { useProfile, useProfiles } from '@/lib/hooks/useProfiles';
+import { useServerHealth } from '@/lib/hooks/useServer';
 import { useStory } from '@/lib/hooks/useStories';
 import { cn } from '@/lib/utils/cn';
 import { useGenerationStore } from '@/stores/generationStore';
@@ -43,6 +44,8 @@ export function FloatingGenerateBox({
   const setSelectedEngine = useUIStore((state) => state.setSelectedEngine);
   const { data: selectedProfile } = useProfile(selectedProfileId || '');
   const { data: profiles } = useProfiles();
+  const { data: health } = useServerHealth();
+  const qwenCloudCloning = health?.qwen_cloud_cloning_enabled ?? false;
   const [isExpanded, setIsExpanded] = useState(false);
   const [isInstructExpanded, setIsInstructExpanded] = useState(false);
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
@@ -173,13 +176,11 @@ export function FloatingGenerateBox({
       // Designed profiles are excluded: they always carry a design engine and
       // would be broken by a fallback to qwen.
       const currentEngine = form.getValues('engine');
-      const presetEngines = new Set([
-        'kokoro',
-        'qwen_custom_voice',
-        'qwen_voice_design',
-        'qwen_cloud',
-      ]);
-      if (currentEngine && presetEngines.has(currentEngine)) {
+      const presetEngines = new Set(['kokoro', 'qwen_custom_voice', 'qwen_voice_design']);
+      if (
+        currentEngine &&
+        (presetEngines.has(currentEngine) || (currentEngine === 'qwen_cloud' && !qwenCloudCloning))
+      ) {
         form.setValue('engine', 'qwen');
       }
     }
@@ -210,7 +211,7 @@ export function FloatingGenerateBox({
     if (selectedProfile && !selectedProfile.personality?.trim()) {
       form.setValue('personality', false);
     }
-  }, [selectedProfile, effectPresets, form]);
+  }, [selectedProfile, effectPresets, form, qwenCloudCloning]);
 
   // Auto-resize textarea based on content (only when expanded)
   useEffect(() => {

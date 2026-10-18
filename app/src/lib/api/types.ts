@@ -296,6 +296,7 @@ export interface HealthResponse {
   backend_variant?: string; // "cpu", "cuda", or "rocm"
   supports_rocm?: boolean; // AMD GPU on Windows or Linux (/dev/kfd) — the ROCm backend is applicable
   cloud_enabled?: boolean; // VOICEBOX_CLOUD_ENABLED on the backend — show the Cloud section
+  qwen_cloud_cloning_enabled?: boolean; // VOICEBOX_QWEN_CLOUD_CLONING — cloned profiles may use qwen_cloud
 }
 
 export interface CudaDownloadProgress {

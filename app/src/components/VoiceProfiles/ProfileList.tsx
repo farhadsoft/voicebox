@@ -5,6 +5,7 @@ import { isProfileCompatibleWithEngine } from '@/components/Generation/EngineMod
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useProfiles } from '@/lib/hooks/useProfiles';
+import { useServerHealth } from '@/lib/hooks/useServer';
 import { useUIStore } from '@/stores/uiStore';
 import { ProfileCard } from './ProfileCard';
 import { ProfileForm } from './ProfileForm';
@@ -15,6 +16,8 @@ export function ProfileList() {
   const setDialogOpen = useUIStore((state) => state.setProfileDialogOpen);
   const selectedEngine = useUIStore((state) => state.selectedEngine);
   const selectedProfileId = useUIStore((state) => state.selectedProfileId);
+  const { data: health } = useServerHealth();
+  const qwenCloudCloning = health?.qwen_cloud_cloning_enabled ?? false;
   const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   // Scroll to the selected profile after engine/sort changes
@@ -56,7 +59,7 @@ export function ProfileList() {
 
   /** Whether a profile is supported by the currently selected engine. */
   const isSupported = (p: (typeof allProfiles)[number]) =>
-    isProfileCompatibleWithEngine(p, selectedEngine);
+    isProfileCompatibleWithEngine(p, selectedEngine, qwenCloudCloning);
 
   // Sort so supported profiles come first
   const sortedProfiles = [...allProfiles].sort(
@@ -99,6 +102,14 @@ export function ProfileList() {
                 <span>{t('profiles.list.unsupportedNote')}</span>
               </div>
             )}
+            {selectedEngine === 'qwen_cloud' &&
+              qwenCloudCloning &&
+              allProfiles.some((p) => (p.voice_type || 'cloned') === 'cloned') && (
+                <div className="col-span-full flex items-center gap-2 text-xs text-muted-foreground py-2">
+                  <Info className="h-3.5 w-3.5 shrink-0" />
+                  <span>{t('profiles.list.qwenCloudCloningNote')}</span>
+                </div>
+              )}
           </div>
         )}
       </div>

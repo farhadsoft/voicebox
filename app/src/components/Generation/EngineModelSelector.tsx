@@ -11,6 +11,7 @@ import {
 import type { VoiceProfileResponse } from '@/lib/api/types';
 import { getLanguageOptionsForEngine } from '@/lib/constants/languages';
 import type { GenerationFormValues } from '@/lib/hooks/useGenerationForm';
+import { useServerHealth } from '@/lib/hooks/useServer';
 
 /**
  * Engine/model options and their display metadata.
@@ -61,9 +62,14 @@ const CLONING_ENGINES = new Set([
 /** Engines that synthesise a voice from a written description. */
 export const DESIGN_ENGINES = new Set(['qwen_voice_design']);
 
-function getAvailableOptions(selectedProfile?: VoiceProfileResponse | null) {
+function getAvailableOptions(
+  selectedProfile?: VoiceProfileResponse | null,
+  qwenCloudCloning = false,
+) {
   if (!selectedProfile) return ENGINE_OPTIONS;
-  return ENGINE_OPTIONS.filter((opt) => isProfileCompatibleWithEngine(selectedProfile, opt.engine));
+  return ENGINE_OPTIONS.filter((opt) =>
+    isProfileCompatibleWithEngine(selectedProfile, opt.engine, qwenCloudCloning),
+  );
 }
 
 function getSelectValue(engine: string, modelSize?: string): string {
@@ -130,10 +136,12 @@ interface EngineModelSelectorProps {
 }
 
 export function EngineModelSelector({ form, compact, selectedProfile }: EngineModelSelectorProps) {
+  const { data: health } = useServerHealth();
+  const qwenCloudCloning = health?.qwen_cloud_cloning_enabled ?? false;
   const engine = form.watch('engine') || 'qwen';
   const modelSize = form.watch('modelSize');
   const selectValue = getSelectValue(engine, modelSize);
-  const availableOptions = getAvailableOptions(selectedProfile);
+  const availableOptions = getAvailableOptions(selectedProfile, qwenCloudCloning);
 
   const currentEngineAvailable = availableOptions.some((opt) => opt.value === selectValue);
 
@@ -178,10 +186,13 @@ export function getEngineDescription(engine: string): string {
 export function isProfileCompatibleWithEngine(
   profile: VoiceProfileResponse,
   engine: string,
+  qwenCloudCloning = false,
 ): boolean {
   const voiceType = profile.voice_type || 'cloned';
   if (voiceType === 'preset') return profile.preset_engine === engine;
-  if (voiceType === 'cloned') return CLONING_ENGINES.has(engine);
+  if (voiceType === 'cloned') {
+    return CLONING_ENGINES.has(engine) || (qwenCloudCloning && engine === 'qwen_cloud');
+  }
   if (voiceType === 'designed') return DESIGN_ENGINES.has(engine);
   return true;
 }
