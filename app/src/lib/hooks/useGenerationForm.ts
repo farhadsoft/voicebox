@@ -30,6 +30,7 @@ const generationSchema = z.object({
       'tada',
       'kokoro',
       'omnivoice',
+      'qwen_cloud',
     ])
     .optional(),
   personality: z.boolean().optional(),
@@ -135,17 +136,19 @@ export function useGenerationForm(options: UseGenerationFormOptions = {}) {
                           ? 'Qwen TTS 1.7B'
                           : 'Qwen TTS 0.6B';
 
-      // Check if model needs downloading
-      try {
-        const modelStatus = await apiClient.getModelStatus();
-        const model = modelStatus.models.find((m) => m.model_name === modelName);
+      // Check if model needs downloading (qwen_cloud runs remotely, nothing to download)
+      if (engine !== 'qwen_cloud') {
+        try {
+          const modelStatus = await apiClient.getModelStatus();
+          const model = modelStatus.models.find((m) => m.model_name === modelName);
 
-        if (model && !model.downloaded) {
-          setDownloadingModelName(modelName);
-          setDownloadingDisplayName(displayName);
+          if (model && !model.downloaded) {
+            setDownloadingModelName(modelName);
+            setDownloadingDisplayName(displayName);
+          }
+        } catch (error) {
+          console.error('Failed to check model status:', error);
         }
-      } catch (error) {
-        console.error('Failed to check model status:', error);
       }
 
       const hasModelSizes =

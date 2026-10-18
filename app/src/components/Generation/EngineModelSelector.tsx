@@ -29,6 +29,7 @@ const ENGINE_OPTIONS = [
   { value: 'tada:3B', label: 'TADA 3B Multilingual', engine: 'tada' },
   { value: 'kokoro', label: 'Kokoro 82M', engine: 'kokoro' },
   { value: 'omnivoice', label: 'OmniVoice (non-commercial)', engine: 'omnivoice' },
+  { value: 'qwen_cloud', label: 'QwenCloud', engine: 'qwen_cloud' },
 ] as const;
 
 const ENGINE_DESCRIPTIONS: Record<string, string> = {
@@ -41,6 +42,7 @@ const ENGINE_DESCRIPTIONS: Record<string, string> = {
   tada: 'HumeAI, 700s+ coherent audio',
   kokoro: '82M params, CPU realtime, 8 langs',
   omnivoice: '23 languages, voice design. CC-BY-NC weights: non-commercial use only',
+  qwen_cloud: 'Cloud API, text leaves this machine, no download',
 };
 
 /** Engines that only support English and should force language to 'en' on select. */

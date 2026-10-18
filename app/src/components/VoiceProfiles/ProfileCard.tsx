@@ -23,6 +23,7 @@ const ENGINE_DISPLAY_NAMES: Record<string, string> = {
   kokoro: 'Kokoro',
   qwen_custom_voice: 'CustomVoice',
   qwen_voice_design: 'VoiceDesign',
+  qwen_cloud: 'QwenCloud',
 };
 
 interface ProfileCardProps {
@@ -127,9 +128,7 @@ export function ProfileCard({ profile, disabled }: ProfileCardProps) {
             {profile.effects_chain && profile.effects_chain.length > 0 && (
               <Sparkles className="h-3.5 w-3.5 text-accent fill-accent" />
             )}
-            {profile.personality?.trim() && (
-              <Wand2 className="h-3.5 w-3.5 text-accent" />
-            )}
+            {profile.personality?.trim() && <Wand2 className="h-3.5 w-3.5 text-accent" />}
           </div>
           <div className="flex gap-0.5 justify-end items-end mt-auto">
             <CircleButton
