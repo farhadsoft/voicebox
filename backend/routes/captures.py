@@ -11,6 +11,7 @@ from ..backends import get_llm_model_configs, get_stt_model_configs
 from ..backends.base import is_model_cached
 from ..database import Capture as DBCapture, get_db
 from ..services import captures as captures_service
+from ..services import openrouter_stt
 from ..services import settings as settings_service
 from ..services.refinement import RefinementFlags
 
@@ -164,17 +165,36 @@ async def capture_readiness_endpoint(db: Session = Depends(get_db)):
     load, so the answer survives backend restarts.
     """
     saved = settings_service.get_capture_settings(db)
-
-    stt_cfg = next(
-        (c for c in get_stt_model_configs() if c.model_size == saved.stt_model),
-        None,
-    )
     llm_cfg = next(
         (c for c in get_llm_model_configs() if c.model_size == saved.llm_model),
         None,
     )
 
-    if stt_cfg is None or llm_cfg is None:
+    if openrouter_stt.is_openrouter_model(saved.stt_model):
+        # Cloud models have nothing to download, so the gate is green; a missing
+        # API key surfaces as a readable error on the first capture instead of a
+        # Download button that would call /models/download with an unknown id.
+        stt = models.ModelReadiness(
+            ready=True,
+            model_name=saved.stt_model,
+            display_name=f"OpenRouter {openrouter_stt.OPENROUTER_STT_MODELS[saved.stt_model]}",
+            size=saved.stt_model,
+            size_mb=None,
+        )
+    else:
+        stt_cfg = next(
+            (c for c in get_stt_model_configs() if c.model_size == saved.stt_model),
+            None,
+        )
+        stt = None if stt_cfg is None else models.ModelReadiness(
+            ready=is_model_cached(stt_cfg.hf_repo_id),
+            model_name=stt_cfg.model_name,
+            display_name=stt_cfg.display_name,
+            size=stt_cfg.model_size,
+            size_mb=stt_cfg.size_mb or None,
+        )
+
+    if stt is None or llm_cfg is None:
         # Should be impossible — both fields are pattern-validated against
         # known sizes — but bail loudly rather than return half a response.
         raise HTTPException(
@@ -182,16 +202,7 @@ async def capture_readiness_endpoint(db: Session = Depends(get_db)):
             detail=f"No model config for stt={saved.stt_model} or llm={saved.llm_model}",
         )
 
-    return models.CaptureReadinessResponse(
-        stt=models.ModelReadiness(
-            ready=is_model_cached(stt_cfg.hf_repo_id),
-            model_name=stt_cfg.model_name,
-            display_name=stt_cfg.display_name,
-            size=stt_cfg.model_size,
-            size_mb=stt_cfg.size_mb or None,
-        ),
-        llm=_llm_readiness(saved, llm_cfg),
-    )
+    return models.CaptureReadinessResponse(stt=stt, llm=_llm_readiness(saved, llm_cfg))
 
 
 def _llm_readiness(saved, llm_cfg) -> models.ModelReadiness:

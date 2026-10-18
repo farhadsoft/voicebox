@@ -7,6 +7,7 @@ from pathlib import Path
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
 from .. import models
+from ..services import openrouter_stt
 from ..services import transcribe
 from ..services.task_queue import create_background_task
 from ..utils.tasks import get_task_manager
@@ -53,6 +54,10 @@ async def transcribe_audio(
         if file_suffix != ".wav":
             stt_path = f"{tmp_path}.stt.wav"
             await asyncio.to_thread(save_audio, audio, stt_path, sr)
+
+        if openrouter_stt.is_openrouter_model(model):
+            text = await openrouter_stt.transcribe(stt_path, language, model)
+            return models.TranscriptionResponse(text=text, duration=duration)
 
         whisper_model = transcribe.get_whisper_model()
         model_size = model if model else whisper_model.model_size
