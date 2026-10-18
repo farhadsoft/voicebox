@@ -6,6 +6,7 @@
  * Chatterbox Multilingual supports 23 languages.
  * Chatterbox Turbo is English-only.
  * Kokoro supports 8 languages.
+ * QwenCloud (qwen-audio-3.0-tts-plus) supports 16 languages.
  */
 
 /** All languages that any engine supports. */
@@ -17,9 +18,11 @@ export const ALL_LANGUAGES = {
   en: 'English',
   es: 'Spanish',
   fi: 'Finnish',
+  fil: 'Filipino',
   fr: 'French',
   he: 'Hebrew',
   hi: 'Hindi',
+  id: 'Indonesian',
   it: 'Italian',
   ja: 'Japanese',
   ko: 'Korean',
@@ -31,7 +34,9 @@ export const ALL_LANGUAGES = {
   ru: 'Russian',
   sv: 'Swedish',
   sw: 'Swahili',
+  th: 'Thai',
   tr: 'Turkish',
+  vi: 'Vietnamese',
   zh: 'Chinese',
 } as const;
 
@@ -97,6 +102,24 @@ export const ENGINE_LANGUAGES: Record<string, readonly LanguageCode[]> = {
     'sw',
     'tr',
     'zh',
+  ],
+  qwen_cloud: [
+    'zh',
+    'en',
+    'fr',
+    'de',
+    'ja',
+    'ko',
+    'ru',
+    'pt',
+    'th',
+    'id',
+    'vi',
+    'it',
+    'es',
+    'ms',
+    'fil',
+    'ar',
   ],
 } as const;
 
