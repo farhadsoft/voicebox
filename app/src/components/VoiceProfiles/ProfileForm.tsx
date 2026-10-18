@@ -49,6 +49,7 @@ import {
   useUpdateProfile,
   useUploadAvatar,
 } from '@/lib/hooks/useProfiles';
+import { useCaptureSettings } from '@/lib/hooks/useSettings';
 import { useSystemAudioCapture } from '@/lib/hooks/useSystemAudioCapture';
 import { useTranscription } from '@/lib/hooks/useTranscription';
 import { convertToWav, formatAudioDuration, getAudioDuration } from '@/lib/utils/audio';
@@ -152,6 +153,7 @@ export function ProfileForm() {
   const uploadAvatar = useUploadAvatar();
   const deleteAvatar = useDeleteAvatar();
   const transcribe = useTranscription();
+  const { settings: captureSettings } = useCaptureSettings();
   const { toast } = useToast();
   const [voiceSource, setVoiceSource] = useState<'clone' | 'builtin' | 'design'>('clone');
   const [designPrompt, setDesignPrompt] = useState<string>('');
@@ -425,7 +427,9 @@ export function ProfileForm() {
 
     try {
       const language = form.getValues('language');
-      const result = await transcribe.mutateAsync({ file, language });
+      const sttModel = captureSettings?.stt_model;
+      const model = sttModel?.startsWith('openrouter-') ? sttModel : undefined;
+      const result = await transcribe.mutateAsync({ file, language, model });
 
       form.setValue('referenceText', result.text, { shouldValidate: true });
     } catch (error) {

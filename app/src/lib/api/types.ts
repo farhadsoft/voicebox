@@ -139,7 +139,14 @@ export interface HistoryListResponse {
   total: number;
 }
 
-export type WhisperModelSize = 'base' | 'small' | 'medium' | 'large' | 'turbo';
+export type WhisperModelSize =
+  | 'base'
+  | 'small'
+  | 'medium'
+  | 'large'
+  | 'turbo'
+  | 'openrouter-whisper-turbo'
+  | 'openrouter-whisper-large-v3';
 
 export type Qwen3ModelSize = '0.6B' | '1.7B' | '4B';
 

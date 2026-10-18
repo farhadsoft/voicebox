@@ -390,6 +390,12 @@ export function CapturesPage() {
                 <SelectItem value="turbo">
                   {t('settings.captures.transcription.model.turbo', { tail: t('settings.captures.transcription.model.tail.nearBest') })}
                 </SelectItem>
+                <SelectItem value="openrouter-whisper-turbo">
+                  {t('settings.captures.transcription.model.openrouterTurbo', { tail: t('settings.captures.transcription.model.tail.cloudFast') })}
+                </SelectItem>
+                <SelectItem value="openrouter-whisper-large-v3">
+                  {t('settings.captures.transcription.model.openrouterLargeV3', { tail: t('settings.captures.transcription.model.tail.cloudBest') })}
+                </SelectItem>
               </SelectContent>
             </Select>
           }

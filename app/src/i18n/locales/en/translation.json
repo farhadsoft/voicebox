@@ -943,18 +943,22 @@
         "description": "Pick which speech-to-text model runs on your captures.",
         "model": {
           "title": "Transcription model",
-          "description": "Whisper ships with Voicebox and runs entirely on your machine.",
+          "description": "Whisper ships with Voicebox and runs on your machine. OpenRouter models send audio to openrouter.ai and need VOICEBOX_OPENROUTER_API_KEY on the backend.",
           "base": "Whisper Base · 74M · {{tail}}",
           "small": "Whisper Small · 244M · {{tail}}",
           "medium": "Whisper Medium · 769M · {{tail}}",
           "large": "Whisper Large · 1.5B · {{tail}}",
           "turbo": "Whisper Turbo · Pruned Large v3 · {{tail}}",
+          "openrouterTurbo": "OpenRouter · Whisper Large v3 Turbo · {{tail}}",
+          "openrouterLargeV3": "OpenRouter · Whisper Large v3 · {{tail}}",
           "tail": {
             "fast": "Fast",
             "balanced": "Balanced",
             "higher": "Higher accuracy",
             "best": "Best accuracy",
-            "nearBest": "Near-best, fast"
+            "nearBest": "Near-best, fast",
+            "cloudFast": "Cloud, fast",
+            "cloudBest": "Cloud, best accuracy"
           }
         },
         "language": {
