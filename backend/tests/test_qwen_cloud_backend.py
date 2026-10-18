@@ -140,3 +140,19 @@ def test_undecodable_audio_raises(api_key_env, monkeypatch):
 
     with pytest.raises(RuntimeError, match="could not be decoded"):
         asyncio.run(backend.generate("Hi.", {}))
+
+
+def test_cloned_voice_id_is_used_and_error_mentions_cross_key(api_key_env, mp3_bytes, monkeypatch):
+    backend = QwenCloudBackend()
+    prompt = {"voice_type": "cloned", "cloud_voice_id": "qwen-audio-3.0-tts-plus-voicebox-abc"}
+
+    calls = _recording_fake(monkeypatch, mp3_bytes)
+    asyncio.run(backend.generate("Hi.", prompt))
+    assert calls[0][1] == "qwen-audio-3.0-tts-plus-voicebox-abc"
+
+    _raising_fake(monkeypatch, _RequestFailureError("InvalidParameter", "voice not found"))
+    with pytest.raises(RuntimeError) as err_info:
+        asyncio.run(backend.generate("Hi.", prompt))
+    message = str(err_info.value)
+    assert "cloned voice" in message
+    assert "pay-as-you-go" in message

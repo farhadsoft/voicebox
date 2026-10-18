@@ -43,6 +43,11 @@ class VoiceProfile(Base):
     # says and how, orthogonal to how it sounds (handled by the preset /
     # cloning metadata above).
     personality = Column(Text, nullable=True)
+    # QwenCloud voice cloning (internal; never in API responses or exports).
+    # Voice id returned by voice-enrollment, plus a hash of the sample audio +
+    # reference text it was enrolled from — a mismatch triggers re-enrollment.
+    qwen_cloud_voice_id = Column(String, nullable=True)
+    qwen_cloud_voice_hash = Column(String, nullable=True)
 
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))
     updated_at = Column(DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))

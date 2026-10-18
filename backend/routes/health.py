@@ -189,6 +189,7 @@ async def health():
         supports_rocm=is_amd_rocm_capable(),
         gpu_compatibility_warning=gpu_compat_warning,
         cloud_enabled=config.is_cloud_enabled(),
+        qwen_cloud_cloning_enabled=config.is_qwen_cloud_cloning_enabled(),
     )
 
 

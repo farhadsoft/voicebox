@@ -167,3 +167,11 @@ def get_cloud_api_url() -> str:
 def is_cloud_enabled() -> bool:
     """Whether Voicebox Cloud login/sync is enabled for this backend."""
     return os.environ.get("VOICEBOX_CLOUD_ENABLED", "").strip().lower() in ("1", "true", "yes", "on")
+
+
+# QwenCloud voice cloning is opt-in: VOICEBOX_QWEN_CLOUD_CLONING=1 lets cloned
+# profiles use the qwen_cloud engine by uploading their sample to QwenCloud's
+# temporary storage for enrollment. Read per call, same as is_cloud_enabled.
+def is_qwen_cloud_cloning_enabled() -> bool:
+    """Whether cloned profiles may use qwen_cloud (uploads the sample to QwenCloud for enrollment)."""
+    return os.environ.get("VOICEBOX_QWEN_CLOUD_CLONING", "").strip().lower() in ("1", "true", "yes", "on")

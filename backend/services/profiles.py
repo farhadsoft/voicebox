@@ -34,6 +34,14 @@ logger = logging.getLogger(__name__)
 
 CLONING_ENGINES = {"qwen", "luxtts", "chatterbox", "chatterbox_turbo", "tada", "omnivoice"}
 
+
+def _cloning_engines() -> set[str]:
+    """Cloning engines available right now — qwen_cloud joins when its opt-in flag is set."""
+    if config.is_qwen_cloud_cloning_enabled():
+        return CLONING_ENGINES | {"qwen_cloud"}
+    return CLONING_ENGINES
+
+
 # Engines that synthesise a voice from a natural-language description
 # (voice_type "designed") rather than from samples or a preset id.
 DEFAULT_DESIGN_ENGINE = "qwen_voice_design"
@@ -160,8 +168,11 @@ def validate_profile_engine(profile, engine: str) -> None:
             raise ValueError(f"Engine '{engine}' does not support designed voice profiles")
         return
 
-    if engine not in CLONING_ENGINES:
-        raise ValueError(f"Engine '{engine}' does not support cloned voice profiles")
+    if engine not in _cloning_engines():
+        message = f"Engine '{engine}' does not support cloned voice profiles"
+        if engine == "qwen_cloud":
+            message += " Set VOICEBOX_QWEN_CLOUD_CLONING=1 to enable QwenCloud voice cloning."
+        raise ValueError(message)
 
 
 async def create_profile(
@@ -486,6 +497,7 @@ async def delete_profile(
         {"default_playback_voice_id": None}
     )
 
+    remote_voice_id = getattr(profile, "qwen_cloud_voice_id", None)
     db.delete(profile)
     db.commit()
 
@@ -495,6 +507,12 @@ async def delete_profile(
 
     # Clean up combined audio cache files for this profile
     clear_profile_cache(profile_id)
+
+    # Best effort: the local profile is already gone; never let a remote
+    # cleanup failure (or a missing enrollment key) break deletion.
+    if remote_voice_id:
+        from . import qwen_cloud_voices
+        await qwen_cloud_voices.delete_remote_voice_best_effort(remote_voice_id)
 
     return True
 
@@ -622,14 +640,22 @@ async def create_voice_prompt_for_profile(
             "design_prompt": profile.design_prompt,
         }
 
-    if engine not in CLONING_ENGINES:
-        raise ValueError(f"Engine '{engine}' does not support cloned voice profiles")
+    if engine not in _cloning_engines():
+        message = f"Engine '{engine}' does not support cloned voice profiles"
+        if engine == "qwen_cloud":
+            message += " Set VOICEBOX_QWEN_CLOUD_CLONING=1 to enable QwenCloud voice cloning."
+        raise ValueError(message)
 
     # ── Cloned profiles: create from audio samples ──
     samples = db.query(DBProfileSample).filter_by(profile_id=profile_id).all()
 
     if not samples:
         raise ValueError(f"No samples found for profile {profile_id}")
+
+    # ── Cloned profile on qwen_cloud: enroll the sample remotely (opt-in) ──
+    if engine == "qwen_cloud":
+        from . import qwen_cloud_voices
+        return await qwen_cloud_voices.voice_prompt_for_profile(profile, samples, db)
 
     tts_model = get_tts_backend_for_engine(engine)
 

@@ -2,17 +2,20 @@
 QwenCloud Token Plan cloud TTS backend.
 
 Synthesises speech through QwenCloud's Token Plan WebSocket endpoint
-(model ``qwen-audio-3.0-tts-plus``) using the DashScope SDK. This is a
-cloud engine: the input text leaves this machine, but reference audio
-never does — QwenCloud voice cloning only accepts a reference audio as
-a public URL, so Voicebox never uploads profile samples.
+(model ``qwen-audio-3.0-tts-plus``) using the DashScope SDK.
 
 Voices work per-profile: a preset profile with
 ``preset_engine="qwen_cloud"`` carries a ``preset_voice_id`` (a system
-voice, or a voice the user cloned outside Voicebox). Any other profile
+voice, or a voice the user cloned outside Voicebox). A cloned profile
+carries a ``cloud_voice_id`` when QwenCloud voice cloning is enabled
+(``VOICEBOX_QWEN_CLOUD_CLONING=1``): the enrollment — uploading the
+sample to DashScope temporary storage and creating the voice with the
+pay-as-you-go key ``VOICEBOX_QWEN_ENROLL_API_KEY`` — happens in
+``backend/services/qwen_cloud_voices.py``; this backend only receives
+the resulting id and never uploads audio itself. Any other profile
 falls back to the preset system voice ``longanlingxin``.
 
-The API key is read only from the environment variable
+The synthesis API key is read only from the environment variable
 ``VOICEBOX_CLOUD_API_KEY`` (a Token Plan key, ``sk-sp-...``). Requires
 the ``dashscope`` package.
 """
@@ -84,11 +87,10 @@ class QwenCloudBackend:
         reference_text: str,
         use_cache: bool = True,
     ) -> tuple[dict, bool]:
-        """Return an empty prompt — the reference sample is deliberately ignored.
+        """Return an empty prompt — qwen_cloud voice prompts are not built here.
 
-        QwenCloud voice cloning requires the reference audio to be a
-        public URL, which Voicebox cannot (and should not) provide, so
-        no sample is ever processed or uploaded here.
+        Cloned profiles are enrolled by ``backend/services/qwen_cloud_voices.py``
+        when ``VOICEBOX_QWEN_CLOUD_CLONING=1``; kept for protocol parity only.
         """
         return {}, False
 
@@ -128,10 +130,13 @@ class QwenCloudBackend:
                 "(sk-sp-...) in the terminal that starts the backend to use the qwen_cloud engine."
             )
 
-        voice = voice_prompt.get("preset_voice_id") or QWEN_CLOUD_DEFAULT_VOICE
+        voice = (
+            voice_prompt.get("preset_voice_id")
+            or voice_prompt.get("cloud_voice_id")
+            or QWEN_CLOUD_DEFAULT_VOICE
+        )
         logger.info(
-            "Sending %d chars of text to external service QwenCloud (model=%s, voice=%s); "
-            "no reference audio is uploaded",
+            "Sending %d chars of text to external service QwenCloud (model=%s, voice=%s)",
             len(text),
             QWEN_CLOUD_MODEL,
             voice,
@@ -162,6 +167,12 @@ class QwenCloudBackend:
             if name.startswith(("InvalidApiKey", "AccessDenied")):
                 raise RuntimeError(
                     f"QwenCloud rejected the API key ({name}). Check {API_KEY_ENV_VAR} is your Token Plan key."
+                ) from exc
+            if voice_prompt.get("cloud_voice_id"):
+                raise RuntimeError(
+                    f"QwenCloud synthesis with cloned voice {voice} failed ({name}): {message}. "
+                    "If QwenCloud reports the voice as unknown or not allowed, Token Plan "
+                    "synthesis may not accept voices created with the pay-as-you-go enrollment key."
                 ) from exc
             raise RuntimeError(f"QwenCloud synthesis failed ({name}): {message}") from exc
 

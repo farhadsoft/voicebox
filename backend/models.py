@@ -481,6 +481,7 @@ class HealthResponse(BaseModel):
     supports_rocm: bool = False  # AMD GPU on Windows or Linux (/dev/kfd) — ROCm backend applicable
     gpu_compatibility_warning: Optional[str] = None  # Warning if GPU arch unsupported
     cloud_enabled: bool = False  # VOICEBOX_CLOUD_ENABLED — the app shows the Cloud section only when true
+    qwen_cloud_cloning_enabled: bool = False  # VOICEBOX_QWEN_CLOUD_CLONING — the app offers cloned profiles for qwen_cloud only when true
 
 
 class DirectoryCheck(BaseModel):

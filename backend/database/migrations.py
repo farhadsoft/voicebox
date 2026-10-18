@@ -160,6 +160,10 @@ def _migrate_profiles(engine, inspector, tables: set[str]) -> None:
         _add_column(engine, "profiles", "default_engine VARCHAR", "default_engine")
     if "personality" not in columns:
         _add_column(engine, "profiles", "personality TEXT", "personality")
+    if "qwen_cloud_voice_id" not in columns:
+        _add_column(engine, "profiles", "qwen_cloud_voice_id VARCHAR", "qwen_cloud_voice_id")
+    if "qwen_cloud_voice_hash" not in columns:
+        _add_column(engine, "profiles", "qwen_cloud_voice_hash VARCHAR", "qwen_cloud_voice_hash")
 
 
 def _migrate_generations(engine, inspector, tables: set[str]) -> None:
