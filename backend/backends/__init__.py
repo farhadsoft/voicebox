@@ -239,6 +239,7 @@ TTS_ENGINES = {
     "tada": "TADA",
     "kokoro": "Kokoro",
     "omnivoice": "OmniVoice",
+    "qwen_cloud": "QwenCloud (Cloud)",
 }
 
 LLM_ENGINES = {
@@ -850,6 +851,10 @@ def get_tts_backend_for_engine(engine: str) -> TTSBackend:
             from .qwen_voice_design_backend import QwenVoiceDesignBackend
 
             backend = QwenVoiceDesignBackend()
+        elif engine == "qwen_cloud":
+            from .qwen_cloud_backend import QwenCloudBackend
+
+            backend = QwenCloudBackend()
         else:
             raise ValueError(f"Unknown TTS engine: {engine}. Supported: {list(TTS_ENGINES.keys())}")
 
